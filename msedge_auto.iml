@@ -7,5 +7,7 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
+    <orderEntry type="library" exported="" name="seleniumhq.selenium.java" level="project" />
+    <orderEntry type="library" exported="" name="testng" level="project" />
   </component>
 </module>

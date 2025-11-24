@@ -1,3 +1,4 @@
+
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
@@ -68,7 +69,7 @@ public class bingAutomation {
             searchBox.sendKeys(query);
             searchBox.submit();
 
-            int delay = random.nextInt(3000) + 1500;
+            int delay = random.nextInt(6000) + 1500;
             Thread.sleep(delay);
         }
         System.out.println(type + " search loop completed.");
