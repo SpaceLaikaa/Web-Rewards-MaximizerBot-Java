@@ -3,9 +3,7 @@ import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.edge.EdgeDriver;
 import org.openqa.selenium.edge.EdgeOptions;
-import org.testng.annotations.AfterMethod;
-import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.Test;
+import org.testng.annotations.*;
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
@@ -18,7 +16,6 @@ public class bingAutomation {
     private final String EDGE_DRIVER_PATH = "C:\\Users\\ardaa\\Desktop\\inteli_framworks\\msedgedriver\\msedgedriver.exe";
 
     private final String[] SEARCH_TERMS = {
-            //part 1
             "Java Spring Boot vs Django performance", "Python vs Java for backend",
             "Izmir University of Economics Software Master's Degree", "Software Engineering internship opportunities 2026",
             "What is a RESTful API in Java", "Design Patterns in Java Singleton",
@@ -29,7 +26,6 @@ public class bingAutomation {
             "Difference between list and tuple Python",
             "best practices for git commit messages",
             "Java multithreading tutorial", "Cloud computing services comparison AWS Azure",
-            //part2
             "Meshuggah 'Immutable' album review", "Meshuggah best guitar riffs",
             "Meshuggah 8-string tuning setup", "Fredrik Thordendal gear setup",
             "Extreme Progressive Metal bands 2025", "Best metal drummers of all time",
@@ -39,7 +35,6 @@ public class bingAutomation {
             "best plugins for metal guitar mixing", "Fractal Audio Axe-Fx III presets",
             "top 10 instrumental progressive metal songs", "Polyphia guitar techniques",
             "electric guitar scales chart",
-            //part 3
             "current US dollar to TL exchange rate", "best new sci-fi movies 2025",
             "Super Lig match highlights last week", "2026 world cup qualifiers Turkey matches",
             "best coffee brewing methods", "new android phones comparison",
@@ -65,24 +60,40 @@ public class bingAutomation {
     @BeforeMethod(onlyForGroups = {"mobile"})
     public void setupMobile() {
         System.setProperty("webdriver.edge.driver", EDGE_DRIVER_PATH);
+
+        Map<String, Object> deviceMetrics = new HashMap<>();
+        deviceMetrics.put("width", 375);
+        deviceMetrics.put("height", 812);
+        deviceMetrics.put("pixelRatio", 3.0);
+
+        Map<String, Object> mobileEmulation = new HashMap<>();
+        mobileEmulation.put("deviceMetrics", deviceMetrics);
+        mobileEmulation.put("userAgent",
+                "Mozilla/5.0 (iPhone; CPU iPhone OS 16_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.0 Mobile/15E148 Safari/604.1");
+
+
         EdgeOptions options = new EdgeOptions();
+        options.setExperimentalOption("mobileEmulation", mobileEmulation);
+        options.addArguments("--disable-blink-features=AutomationControlled");
 
 
-        String mobileUserAgent = "Mozilla/5.0 (iPhone; CPU iPhone OS 16_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.0 Mobile/15E148 Safari/604.1";
-        options.addArguments("--user-agent=" + mobileUserAgent);
-
-        options.addArguments("--window-size=375,667");
 
         driver = new EdgeDriver(options);
         driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(10));
-        System.out.println("Mobil User-Agent forced (Edge).");
+
+        System.out.println("mobile emulation");
     }
+
 
     @Test(groups = {"desktop"})
     public void performDesktopSearches() throws InterruptedException {
         performSearches(20, "Desktop");
     }
 
+    @Test(groups = {"mobile"})
+    public void performMobileSearches() throws InterruptedException {
+        performSearches(15, "Mobile");
+    }
 
     private void performSearches(int searchCount, String type) throws InterruptedException {
         Random random = new Random();
@@ -90,7 +101,12 @@ public class bingAutomation {
 
         for (int i = 0; i < searchCount; i++) {
             String query = SEARCH_TERMS[random.nextInt(SEARCH_TERMS.length)];
-            driver.get("https://www.bing.com");
+
+            if (type.equals("Mobile")) {
+                driver.get("https://m.bing.com");
+            } else {
+                driver.get("https://www.bing.com");
+            }
 
             System.out.println(type + " Search (" + (i + 1) + "/" + searchCount + "): " + query);
 
@@ -99,7 +115,7 @@ public class bingAutomation {
             searchBox.submit();
 
             Thread.sleep(1000);
-            js.executeScript("window.scrollBy(0, Math.random() * 800 + 400)"); // Rastgele kaydırma
+            js.executeScript("window.scrollBy(0, Math.random() * 800 + 400)");
             Thread.sleep(1000);
 
             int delay = random.nextInt(6000) + 1500;
