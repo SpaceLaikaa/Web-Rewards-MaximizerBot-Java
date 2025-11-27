@@ -12,7 +12,7 @@ import org.openqa.selenium.JavascriptExecutor;
 
 public class bingAutomation {
 
-    private WebDriver driver;
+    private ThreadLocal<WebDriver> threadDriver = new ThreadLocal<>();
     private final String EDGE_DRIVER_PATH = "C:\\Users\\ardaa\\Desktop\\inteli_framworks\\msedgedriver\\msedgedriver.exe";
 
     private final String[] SEARCH_TERMS = {
@@ -49,15 +49,22 @@ public class bingAutomation {
             "cheapest flight ticket Izmir Kocaeli"
     };
 
-    @BeforeMethod(onlyForGroups = {"desktop"})
-    public void setupDesktop() {
-        System.setProperty("webdriver.edge.driver", EDGE_DRIVER_PATH);
-        driver = new EdgeDriver();
-        driver.manage().window().maximize();
-        driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(10));
+    public WebDriver getDriver() {
+        return threadDriver.get();
     }
 
-    @BeforeMethod(onlyForGroups = {"mobile"})
+    // DÜZELTME BURADA: alwaysRun = true eklendi
+    @BeforeMethod(onlyForGroups = {"desktop"}, alwaysRun = true)
+    public void setupDesktop() {
+        System.setProperty("webdriver.edge.driver", EDGE_DRIVER_PATH);
+        WebDriver driver = new EdgeDriver();
+        threadDriver.set(driver);
+        getDriver().manage().window().maximize();
+        getDriver().manage().timeouts().implicitlyWait(Duration.ofSeconds(10));
+    }
+
+    // DÜZELTME BURADA: alwaysRun = true eklendi
+    @BeforeMethod(onlyForGroups = {"mobile"}, alwaysRun = true)
     public void setupMobile() {
         System.setProperty("webdriver.edge.driver", EDGE_DRIVER_PATH);
 
@@ -71,12 +78,9 @@ public class bingAutomation {
         mobileEmulation.put("userAgent",
                 "Mozilla/5.0 (iPhone; CPU iPhone OS 16_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.0 Mobile/15E148 Safari/604.1");
 
-
         EdgeOptions options = new EdgeOptions();
         options.setExperimentalOption("mobileEmulation", mobileEmulation);
         options.addArguments("--disable-blink-features=AutomationControlled");
-        
-        //for better stability / anti bot detection
         options.addArguments("--disable-infobars");
         options.addArguments("--no-sandbox");
         options.addArguments("--disable-gpu");
@@ -85,40 +89,40 @@ public class bingAutomation {
         options.setCapability("acceptInsecureCerts", true);
         options.addArguments("--disable-blink-features=AutomationControlled");
 
-
-        driver = new EdgeDriver(options);
-        driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(10));
+        WebDriver driver = new EdgeDriver(options);
+        threadDriver.set(driver);
+        getDriver().manage().timeouts().implicitlyWait(Duration.ofSeconds(10));
 
         System.out.println("mobile emulation");
     }
 
-
     @Test(groups = {"desktop"})
     public void performDesktopSearches() throws InterruptedException {
-        performSearches(20, "Desktop");
+        performSearches(60, "Desktop");
     }
 
     @Test(groups = {"mobile"})
     public void performMobileSearches() throws InterruptedException {
-        performSearches(15, "Mobile");
+        performSearches(45, "Mobile");
     }
 
     private void performSearches(int searchCount, String type) throws InterruptedException {
         Random random = new Random();
-        JavascriptExecutor js = (JavascriptExecutor) driver;
+
+        JavascriptExecutor js = (JavascriptExecutor) getDriver();
 
         for (int i = 0; i < searchCount; i++) {
             String query = SEARCH_TERMS[random.nextInt(SEARCH_TERMS.length)];
 
             if (type.equals("Mobile")) {
-                driver.get("https://m.bing.com");
+                getDriver().get("https://m.bing.com");
             } else {
-                driver.get("https://www.bing.com");
+                getDriver().get("https://www.bing.com");
             }
 
             System.out.println(type + " Search (" + (i + 1) + "/" + searchCount + "): " + query);
 
-            WebElement searchBox = driver.findElement(By.name("q"));
+            WebElement searchBox = getDriver().findElement(By.name("q"));
             searchBox.sendKeys(query);
             searchBox.submit();
 
@@ -126,7 +130,7 @@ public class bingAutomation {
             js.executeScript("window.scrollBy(0, Math.random() * 800 + 400)");
             Thread.sleep(1000);
 
-            int delay = random.nextInt(6000) + 1500;
+            int delay = random.nextInt(4500) + 1500;
             Thread.sleep(delay);
         }
         System.out.println(type + " search loop completed.");
@@ -134,8 +138,9 @@ public class bingAutomation {
 
     @AfterMethod(alwaysRun = true)
     public void tearDown() {
-        if (driver != null) {
-            driver.quit();
+        if (getDriver() != null) {
+            getDriver().quit();
+            threadDriver.remove();
         }
     }
 }
